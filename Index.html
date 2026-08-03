@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Panel de Servicios — Aliados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0F1C2E;--bg:#EEF1F5;--card:#FFFFFF;--line:#DEE4EC;
+    --txt:#0F1C2E;--txt-mut:#5A6B80;--dir:#2563EB;--dir-soft:#E5ECFB;
+    --ali:#E8890B;--ali-soft:#FBEEDA;--ok:#159B5C;--warn:#DC2626;
+    --accent:#2563EB;--accent-soft:#E5ECFB;
+    --shadow:0 1px 2px rgba(15,28,46,.06),0 2px 8px rgba(15,28,46,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);
+    line-height:1.45;padding-bottom:40px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:560px;margin:0 auto}
+  header{background:var(--ink);color:#fff;padding:22px 18px 20px;
+    padding-top:calc(22px + env(safe-area-inset-top));border-radius:0 0 20px 20px;}
+  .eyebrow{font-family:'Barlow Semi Condensed',sans-serif;font-weight:600;font-size:12px;
+    letter-spacing:.18em;text-transform:uppercase;color:#7E93AC;}
+  header h1{font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;font-size:30px;
+    line-height:1.05;letter-spacing:-.01em;margin:2px 0 4px;}
+  header .tag{display:inline-block;margin-top:4px;font-family:'Barlow Semi Condensed',sans-serif;
+    font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 10px;border-radius:7px;background:var(--accent);color:#fff;}
+  header p{font-size:13px;color:#A9B8CB;margin-top:8px}
+  .controls{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 14px 10px;border-bottom:1px solid var(--line);}
+  .search{position:relative}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:var(--txt-mut)}
+  .search input{width:100%;border:1.5px solid var(--line);background:#fff;border-radius:12px;
+    padding:11px 38px 11px 38px;font-size:16px;font-family:'Inter';color:var(--txt);outline:none;transition:.18s;}
+  .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .search .clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:#E1E7EF;
+    color:var(--txt-mut);border-radius:50%;width:24px;height:24px;font-size:15px;cursor:pointer;display:none;}
+  section{padding:16px 14px 4px}
+  .sec-title{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--txt-mut);margin:6px 2px 10px;display:flex;align-items:center;gap:8px;}
+  .sec-title::after{content:"";flex:1;height:1px;background:var(--line)}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .kpi{background:var(--card);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);border:1px solid var(--line);}
+  .kpi .lab{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--txt-mut)}
+  .kpi .val{font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;font-size:28px;line-height:1.1;margin-top:2px;letter-spacing:-.01em;}
+  .kpi .sub{font-size:11px;color:var(--txt-mut);margin-top:1px}
+  .kpi.accent .val{color:var(--accent)}
+  .kpi.warn .val{color:var(--warn)}
+  .kpi.ok .val{color:var(--ok)}
+  /* charts */
+  .charts{display:flex;flex-direction:column;gap:12px}
+  .chartcard{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 14px 12px}
+  .chartcard h3{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:16px;color:var(--ink);letter-spacing:-.01em}
+  .chartcard .csub{font-size:11px;color:var(--txt-mut);margin:1px 0 10px}
+  .cw{position:relative;height:220px}
+  .soon{border:1.5px dashed var(--line);border-radius:12px;padding:24px 16px;text-align:center;color:var(--txt-mut);font-size:13px;line-height:1.5}
+  .soon .ico{font-size:26px;opacity:.45;margin-bottom:8px}
+  .soon b{color:var(--txt)}
+  .count-note{font-size:12px;color:var(--txt-mut);margin:-2px 2px 10px}
+  .list{display:flex;flex-direction:column;gap:9px}
+  .card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;transition:.15s;border-left:4px solid var(--accent)}
+  .card.you{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+  .card-head{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer}
+  .rank{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:15px;width:30px;text-align:center;color:var(--txt-mut);flex-shrink:0;}
+  .rank .medal{font-size:20px}
+  .who{flex:1;min-width:0}
+  .who .name{font-weight:600;font-size:15px;line-height:1.2;letter-spacing:-.01em}
+  .who .meta{display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap}
+  .badge{font-family:'Barlow Semi Condensed',sans-serif;font-weight:600;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+  .city{font-size:12px;color:var(--txt-mut)}
+  .prodbox{text-align:right;flex-shrink:0}
+  .prodbox .p{font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;font-size:22px;line-height:1}
+  .prodbox .pl{font-size:10px;color:var(--txt-mut);text-transform:uppercase;letter-spacing:.06em}
+  .chev{width:16px;height:16px;fill:var(--txt-mut);flex-shrink:0;transition:.2s}
+  .card.open .chev{transform:rotate(180deg)}
+  .gauge{padding:0 14px 12px}
+  .gtrack{position:relative;height:7px;background:#EEF1F5;border-radius:5px;overflow:visible}
+  .gfill{height:100%;border-radius:5px;background:var(--accent)}
+  .gavg{position:absolute;top:-3px;width:2px;height:13px;background:var(--ink);border-radius:2px;opacity:.55}
+  .gavg::after{content:"prom";position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--txt-mut);font-weight:600;letter-spacing:.03em}
+  .detail{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .card.open .detail{max-height:900px}
+  .pchart{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .pchart-t{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:13px;color:var(--ink);margin-bottom:8px;letter-spacing:.01em}
+  .pchart .cw{height:180px}
+  .pchart .none{font-size:12px;color:var(--txt-mut);font-style:italic}
+  .detail-in{padding:4px 14px 15px;border-top:1px solid var(--line);margin-top:2px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .stat{background:var(--bg);border-radius:10px;padding:9px 10px}
+  .stat .sl{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--txt-mut);font-weight:600}
+  .stat .sv{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:20px;line-height:1.1;margin-top:1px}
+  .stat .sv.warn{color:var(--warn)}
+  .stat .sv.ok{color:var(--ok)}
+  .nodata{color:var(--txt-mut);font-size:13px;padding:10px 2px 0;font-style:italic}
+  .empty{text-align:center;color:var(--txt-mut);padding:40px 20px;font-size:14px;line-height:1.6}
+  .empty b{color:var(--txt);font-size:15px}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 14px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  footer{padding:22px 18px 10px;font-size:11px;color:var(--txt-mut);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Informe de gestión · Servicios</div>
+    <h1>Panel de Técnicos</h1>
+    <span class="tag">Aliados</span>
+    <p id="period">Toca tu nombre para ver tu detalle</p>
+  </header>
+
+  <div class="controls">
+    <div class="search">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input id="q" type="search" placeholder="Busca tu nombre…" autocomplete="off">
+      <button class="clear" id="clear">×</button>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-title">Resumen global</div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section id="chartsSec" style="display:none">
+    <div class="sec-title">Gráficas</div>
+    <div class="charts">
+      <div class="chartcard">
+        <h3>Productividad diaria</h3>
+        <div class="csub" id="dailySub">Evolución día a día</div>
+        <div id="dailyWrap"></div>
+      </div>
+      <div class="chartcard">
+        <h3>Productividad promedio por ciudad</h3>
+        <div class="csub">Promedio del grupo en cada ciudad</div>
+        <div class="cw"><canvas id="chCiudad"></canvas></div>
+      </div>
+      <div class="chartcard">
+        <h3>Gestión por ciudad</h3>
+        <div class="csub">Cancelados, aplazados y USNP</div>
+        <div class="cw"><canvas id="chGestion"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title" id="listTitle">Ranking de productividad</div>
+    <div class="count-note" id="countNote"></div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <footer>
+    <b>Productividad</b> = servicios ponderados por tiempo. La barra de cada técnico lo compara contra el promedio del grupo. Cancelados, aplazados, USNP (usuario se niega a pagar) y pendientes provienen de los registros del período.<br><br>
+    Panel de <b>Aliados</b>. Las cifras se calculan por técnico a partir de la plantilla publicada.
+  </footer>
+</div>
+
+<script>
+/* === CONFIG DEL PANEL === */
+const GRUPO="ali";                 /* "dir" o "ali" */
+const ARCHIVO="datos-aliados.xlsx";       /* archivo de datos de este grupo */
+document.documentElement.style.setProperty('--accent', GRUPO==='ali'?'#E8890B':'#2563EB');
+document.documentElement.style.setProperty('--accent-soft', GRUPO==='ali'?'#FBEEDA':'#E5ECFB');
+const ACCENT=GRUPO==='ali'?'#E8890B':'#2563EB';
+
+const $=s=>document.querySelector(s);
+const norm=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+const fmt=(v,d=0)=> v==null?"—":Number(v).toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+const sum=(arr,k)=>arr.reduce((a,x)=>a+(x[k]||0),0);
+const disp=t=> t.t==="ali"? t.n.replace(/^ALIADO\s+/i,"") : t.n;
+let T=[], daily=[], query="";
+
+function numv(v){
+  if(v==null||v==='') return null;
+  if(typeof v==='number') return v;
+  let s=String(v).trim().replace(/\s/g,'').replace(/%/g,'').replace(/\$/g,'');
+  if(s==='') return null;
+  if(s.includes(',')&&s.includes('.')) s=s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(',')) s=s.replace(',','.');
+  const n=parseFloat(s); return isNaN(n)?null:n;
+}
+function sheetRows(wb,name){
+  const ws=wb.Sheets[name]; if(!ws) return [];
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false,defval:null});
+  let h=aoa.findIndex(r=>Array.isArray(r)&&r.some(c=>c!=null&&norm(c)==='tecnico'));
+  if(h<0) return [];
+  const heads=aoa[h].map(c=>c==null?'':String(c).trim());
+  const res=[];
+  for(let i=h+1;i<aoa.length;i++){ const row=aoa[i]; if(!row) continue;
+    const o={}; let any=false;
+    heads.forEach((k,j)=>{ if(k){ o[k]=row[j]; if(row[j]!=null&&row[j]!=='') any=true; }});
+    if(any) res.push(o); }
+  return res;
+}
+function pick(o,...names){ const ks=Object.keys(o);
+  for(const w of names){ const k=ks.find(k=>norm(k)===norm(w)); if(k!=null) return o[k]; } return null; }
+function loadEquiv(wb){
+  const ws=wb.Sheets['Equivalencias']; const m={}; if(!ws) return m;
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false,defval:null});
+  for(const r of aoa){ if(!r||r.length<2) continue; const a=r[0],b=r[1];
+    if(a==null||b==null) continue; const na=norm(a);
+    if(na==='nombre como aparece en el reporte'||na.startsWith('equivalencias')||String(a).startsWith('▲')) continue;
+    m[na]=String(b).trim(); }
+  return m;
+}
+function estado(t,m,cargando){ $("#kpis").innerHTML=''; $("#countNote").textContent=''; $("#chartsSec").style.display='none';
+  $("#list").innerHTML=`<div class="empty">${cargando?'<div class="spin"></div>':''}<b>${t}</b><br>${m}</div>`; }
+
+async function cargar(){
+  estado('Cargando datos…','Leyendo la plantilla publicada.',true);
+  if(typeof XLSX==='undefined') return estado('Sin conexión','No se pudo cargar el lector de datos. Revisa tu conexión.');
+  let buf;
+  try{ const r=await fetch(ARCHIVO+'?t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw 0; buf=await r.arrayBuffer(); }
+  catch(e){ return estado('No se encontró el archivo de datos',`Publica <b>${ARCHIVO}</b> junto a este panel y recarga.`); }
+  let wb; try{ wb=XLSX.read(buf,{type:'array',cellDates:true}); }catch(e){ return estado('No se pudo leer el archivo','Formato de Excel no válido.'); }
+
+  const equiv=loadEquiv(wb); const map=new Map();
+  const rec=(raw)=>{ if(raw==null) return null; let name=String(raw).trim();
+    if(!name||name.startsWith('▲')||norm(name)==='total') return null;
+    const uni=equiv[norm(name)]||name; if(norm(uni).includes('useche')) return null;
+    const key=norm(uni);
+    if(!map.has(key)) map.set(key,{n:uni.toUpperCase(),t:norm(uni).startsWith('aliado')?'ali':'dir',cities:new Set(),
+      cit:null,min:null,prod:null,ser:null,fu:null,canc:null,apl:null,neg:null,pen:null,cum:null,ingresos:null,nps:null,enc:null});
+    return map.get(key); };
+  const addCity=(r,o)=>{ const c=pick(o,'Ciudad'); if(c) String(c).split('/').forEach(x=>{ if(x.trim()) r.cities.add(x.trim()); }); };
+
+  for(const o of sheetRows(wb,'Productividad')){ const r=rec(pick(o,'Técnico')); if(!r) continue;
+    r.cit=numv(pick(o,'Total Citas')); r.min=numv(pick(o,'Tiempo Minutos')); r.prod=numv(pick(o,'Productividad'));
+    r.ser=numv(pick(o,'Total Servicios')); r.fu=numv(pick(o,'%FU')); addCity(r,o); }
+  for(const o of sheetRows(wb,'Cancelados y Aplazados')){ const r=rec(pick(o,'Técnico')); if(!r) continue;
+    r.canc=(r.canc||0)+(numv(pick(o,'Cancelados'))||0); r.apl=(r.apl||0)+(numv(pick(o,'Aplazados'))||0); addCity(r,o); }
+  for(const o of sheetRows(wb,'USNP')){ const r=rec(pick(o,'Técnico')); if(!r) continue;
+    r.neg=(r.neg||0)+(numv(pick(o,'Usuario se niega a pagar','USNP'))||0); addCity(r,o); }
+  for(const o of sheetRows(wb,'Pendientes')){ const r=rec(pick(o,'Técnico')); if(!r) continue;
+    r.pen=(r.pen||0)+(numv(pick(o,'Pendiente','Pendientes'))||0); r.cum=(r.cum||0)+(numv(pick(o,'Cumplidos'))||0); }
+  for(const o of sheetRows(wb,'Ingresos')){ const r=rec(pick(o,'Técnico')); if(!r) continue;
+    const v=numv(pick(o,'Ingresos')); if(v!=null) r.ingresos=(r.ingresos||0)+v; }
+  for(const o of sheetRows(wb,'NPS')){ const r=rec(pick(o,'Técnico')); if(!r) continue;
+    const v=numv(pick(o,'NPS')); if(v!=null) r.nps=v; const e=numv(pick(o,'Encuestas','# Encuestas')); if(e!=null) r.enc=e; }
+
+  /* Productividad diaria: Fecha | Técnico | Productividad */
+  daily=[];
+  for(const o of sheetRows(wb,'Productividad Diaria')){
+    const name=pick(o,'Técnico'); const iso=isoOf(parseFecha(pick(o,'Fecha'))); const p=numv(pick(o,'Productividad'));
+    if(name==null||iso==null||p==null) continue;
+    const uni=equiv[norm(name)]||name; if(norm(uni).includes('useche')) continue;
+    daily.push({key:norm(uni),iso:iso,prod:p});
+  }
+
+  T=[...map.values()].filter(x=>x.t===GRUPO);   /* solo este grupo */
+  T.forEach(r=>{ r.c=r.cities.size?[...r.cities].join(' / '):'—'; delete r.cities; });
+  if(!T.length) return estado('Sin técnicos en el archivo','Verifica que pegaste los datos debajo de los encabezados.');
+  buildDaily();
+  refresh(); renderCharts();
+}
+
+/* ---------- FECHAS / DIARIO ---------- */
+function parseFecha(v){
+  if(v==null||v==='') return null;
+  if(v instanceof Date && !isNaN(v)) return v;
+  if(typeof v==='number'){ const e=new Date(Math.round((v-25569)*86400*1000)); return isNaN(e)?null:e; }
+  const s=String(v).trim();
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/); if(m){ let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]); }
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function isoOf(d){ if(!d) return null; const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function fmtDM(iso){ const [y,m,d]=iso.split('-'); return d+'/'+m; }
+
+let dailyByTech={}, allDates=[], promByDate={};
+function buildDaily(){
+  dailyByTech={}; promByDate={}; const set=new Set();
+  daily.forEach(d=>{ set.add(d.iso); (dailyByTech[d.key]=dailyByTech[d.key]||{})[d.iso]=d.prod; });
+  allDates=[...set].sort().slice(-30);           /* últimos 30 días */
+  const agg={}; allDates.forEach(iso=>agg[iso]={s:0,n:0});
+  daily.forEach(d=>{ if(agg[d.iso]){ agg[d.iso].s+=d.prod; agg[d.iso].n++; } });
+  allDates.forEach(iso=>{ promByDate[iso]= agg[iso].n? agg[iso].s/agg[iso].n : null; });
+}
+
+/* ---------- KPIs / lista ---------- */
+function searched(list){ if(!query) return list; const q=norm(query);
+  return list.filter(x=> norm(x.n).includes(q) || norm(x.c).includes(q)); }
+function renderKPIs(list){
+  const wp=list.filter(x=>x.prod!=null);
+  const avg=wp.length? wp.reduce((a,x)=>a+x.prod,0)/wp.length:0;
+  const cards=[
+    {lab:"Técnicos",val:fmt(list.length),sub:GRUPO==='ali'?'aliados':'directos',cls:""},
+    {lab:"Productividad prom.",val:fmt(avg,2),sub:wp.length+" con registro",cls:"accent"},
+    {lab:"Total citas",val:fmt(sum(wp,'cit')),sub:"agendadas",cls:""},
+    {lab:"Total servicios",val:fmt(sum(wp,'ser'),1),sub:"realizados",cls:"ok"},
+    {lab:"Cancelados",val:fmt(sum(list,'canc')),sub:"en el período",cls:"warn"},
+    {lab:"Aplazados",val:fmt(sum(list,'apl')),sub:"reprogramados",cls:"warn"},
+    {lab:"USNP",val:fmt(sum(list,'neg')),sub:"casos",cls:"warn"},
+    {lab:"Pendientes cumplidos",val:fmt(sum(list,'cum'))+"/"+fmt(sum(list,'pen')),sub:"resueltos",cls:"ok"},
+  ];
+  $("#kpis").innerHTML=cards.map(c=>`<div class="kpi ${c.cls}"><div class="lab">${c.lab}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
+}
+function renderList(){
+  const base=T;
+  const wp=base.filter(x=>x.prod!=null);
+  const avg=wp.length? wp.reduce((a,x)=>a+x.prod,0)/wp.length:0;
+  const mx=wp.length? Math.max(...wp.map(x=>x.prod)):1;
+  const sorted=[...base].sort((a,b)=>{ if(a.prod==null&&b.prod==null) return disp(a).localeCompare(disp(b));
+    if(a.prod==null) return 1; if(b.prod==null) return -1; return b.prod-a.prod; });
+  const rankMap=new Map(); wp.slice().sort((a,b)=>b.prod-a.prod).forEach((x,i)=>rankMap.set(x.n,i+1));
+  const view=searched(sorted);
+  $("#countNote").textContent = query? `${view.length} resultado${view.length!==1?'s':''} para “${query}”`
+    : `${base.length} técnicos · ordenados por productividad`;
+  if(!view.length){ $("#list").innerHTML=`<div class="empty">No encontramos a nadie con ese nombre.<br>Revisa la escritura.</div>`; return; }
+  const medals={1:"🥇",2:"🥈",3:"🥉"};
+  const st=(l,v,cls="")=>`<div class="stat"><div class="sl">${l}</div><div class="sv ${cls}">${v}</div></div>`;
+  $("#list").innerHTML=view.map(x=>{
+    const you=query&&norm(x.n).includes(norm(query))&&view.length<=3;
+    const r=rankMap.get(x.n);
+    const rankCell=x.prod==null?'·':(medals[r]?`<span class="medal">${medals[r]}</span>`:r);
+    const pct=x.prod==null?0:Math.max(6,Math.round(x.prod/mx*100));
+    const avgPct=x.prod==null?0:Math.round(avg/mx*100);
+    const gauge=x.prod==null?'':`<div class="gauge"><div class="gtrack"><div class="gfill" style="width:${pct}%"></div><div class="gavg" style="left:${avgPct}%"></div></div></div>`;
+    let extra='';
+    if(x.ingresos!=null) extra+=st("Ingresos","$"+fmt(x.ingresos));
+    if(x.nps!=null) extra+=st("NPS",fmt(x.nps)+(x.enc!=null?` · ${fmt(x.enc)} enc.`:''));
+    const tieneDiario = dailyByTech[norm(x.n)] && Object.keys(dailyByTech[norm(x.n)]).length;
+    const pchart = tieneDiario
+      ? `<div class="pchart"><div class="pchart-t">Tu productividad diaria (últimos 30 días)</div><div class="cw"><canvas class="pdaily" data-key="${norm(x.n)}"></canvas></div></div>`
+      : (daily.length? `<div class="pchart"><div class="pchart-t">Tu productividad diaria</div><div class="none">Sin registros diarios en este período.</div></div>`:'');
+    let detail;
+    if(x.prod!=null){
+      detail=`<div class="grid">
+        ${st("Citas",fmt(x.cit))}${st("Servicios",fmt(x.ser,1),"ok")}${st("%FU",x.fu==null?"—":fmt(x.fu)+"%")}
+        ${st("Cancelados",fmt(x.canc),x.canc?"warn":"")}${st("Aplazados",fmt(x.apl),x.apl?"warn":"")}${st("USNP",fmt(x.neg),x.neg?"warn":"")}
+        ${st("Minutos",fmt(x.min))}${st("Pendientes",x.pen==null?"—":fmt(x.cum)+"/"+fmt(x.pen),"ok")}${st("Ciudad",x.c.split(' / ')[0])}
+        ${extra}</div>${pchart}`;
+    } else {
+      detail=`<div class="nodata">Sin productividad registrada este período · solo indicadores de gestión.</div>
+      <div class="grid">${st("Cancelados",fmt(x.canc),x.canc?"warn":"")}${st("Aplazados",fmt(x.apl),x.apl?"warn":"")}${st("USNP",fmt(x.neg),x.neg?"warn":"")}
+        ${st("Pendientes",x.pen==null?"—":fmt(x.cum)+"/"+fmt(x.pen),"ok")}${st("Ciudad",x.c)}${extra}</div>${pchart}`;
+    }
+    return `<div class="card ${you?'you':''}">
+      <div class="card-head" onclick="toggleCard(this)">
+        <div class="rank">${rankCell}</div>
+        <div class="who"><div class="name">${disp(x)}</div>
+          <div class="meta"><span class="badge">${GRUPO==='ali'?'Aliado':'Directo'}</span><span class="city">${x.c}</span></div></div>
+        ${x.prod!=null?`<div class="prodbox"><div class="p">${fmt(x.prod,2)}</div><div class="pl">Prod.</div></div>`:''}
+        <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+      </div>${gauge}<div class="detail"><div class="detail-in">${detail}</div></div></div>`;
+  }).join("");
+  if(query&&view.length===1){ $("#list .card").classList.add("open"); }
+}
+function refresh(){ renderKPIs(T); renderList(); }
+
+/* ---------- GRÁFICAS ---------- */
+let chCiudad, chGestion, chDaily;
+function porCiudad(){
+  const m={};
+  T.forEach(x=>{ const c=(x.c||'—').split(' / ')[0];
+    if(!m[c]) m[c]={ps:0,pn:0,canc:0,apl:0,neg:0};
+    if(x.prod!=null){ m[c].ps+=x.prod; m[c].pn++; }
+    m[c].canc+=x.canc||0; m[c].apl+=x.apl||0; m[c].neg+=x.neg||0; });
+  return m;
+}
+function renderCharts(){
+  $("#chartsSec").style.display='';
+  Chart.defaults.font.family="Inter, sans-serif";
+  Chart.defaults.color="#5A6B80";
+  const m=porCiudad();
+  const cities=Object.keys(m).filter(c=>c!=='—');
+
+  // Productividad promedio por ciudad
+  const prodC=cities.map(c=> m[c].pn? +(m[c].ps/m[c].pn).toFixed(2):0);
+  if(chCiudad) chCiudad.destroy();
+  chCiudad=new Chart($("#chCiudad"),{type:'bar',
+    data:{labels:cities,datasets:[{data:prodC,backgroundColor:ACCENT,borderRadius:6,maxBarThickness:46}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,grid:{color:'#EEF1F5'}},x:{grid:{display:false}}}}});
+
+  // Gestión por ciudad
+  if(chGestion) chGestion.destroy();
+  chGestion=new Chart($("#chGestion"),{type:'bar',
+    data:{labels:cities,datasets:[
+      {label:'Cancelados',data:cities.map(c=>m[c].canc),backgroundColor:'#DC2626',borderRadius:4},
+      {label:'Aplazados',data:cities.map(c=>m[c].apl),backgroundColor:'#E8890B',borderRadius:4},
+      {label:'USNP',data:cities.map(c=>m[c].neg),backgroundColor:'#0F1C2E',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{y:{beginAtZero:true,grid:{color:'#EEF1F5'}},x:{grid:{display:false}}}}});
+
+  // Productividad diaria
+  renderDaily();
+}
+function renderDaily(){
+  const wrap=$("#dailyWrap"); const sub=$("#dailySub");
+  if(!allDates.length){
+    sub.textContent='Se activa al cargar el reporte diario';
+    wrap.innerHTML=`<div class="soon"><div class="ico">📈</div>
+      <b>Aún no hay datos diarios.</b><br>Cuando pegues el reporte diario (Fecha · Técnico · Productividad) en la pestaña <b>Productividad Diaria</b>, aquí verás la evolución día a día.</div>`;
+    return;
+  }
+  const labels=allDates.map(fmtDM);
+  const prom=allDates.map(iso=> promByDate[iso]!=null? +promByDate[iso].toFixed(2):null);
+  sub.textContent='Productividad promedio del grupo, por día (últimos 30 días)';
+  wrap.innerHTML='<div class="cw"><canvas id="chDaily"></canvas></div>';
+  if(chDaily) chDaily.destroy();
+  chDaily=new Chart($("#chDaily"),{type:'line',
+    data:{labels,datasets:[{label:'Promedio',data:prom,borderColor:ACCENT,backgroundColor:ACCENT+'22',
+      fill:true,tension:.3,pointRadius:2,borderWidth:2,spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,grid:{color:'#EEF1F5'}},x:{grid:{display:false},ticks:{maxTicksLimit:8}}}}});
+}
+
+/* abre/cierra tarjeta y dibuja la gráfica personal la primera vez */
+function toggleCard(head){
+  const card=head.parentNode; card.classList.toggle('open');
+  if(card.classList.contains('open')){
+    const cv=card.querySelector('canvas.pdaily');
+    if(cv && !cv.dataset.done){ cv.dataset.done='1'; requestAnimationFrame(()=>drawPersonal(cv)); }
+  }
+}
+function drawPersonal(cv){
+  const key=cv.dataset.key; const serie=dailyByTech[key]||{};
+  const labels=allDates.map(fmtDM);
+  const mias=allDates.map(iso=> serie[iso]!=null? +Number(serie[iso]).toFixed(2):null);
+  const prom=allDates.map(iso=> promByDate[iso]!=null? +promByDate[iso].toFixed(2):null);
+  new Chart(cv,{type:'line',data:{labels,datasets:[
+    {label:'Tú',data:mias,borderColor:ACCENT,backgroundColor:ACCENT+'22',fill:false,tension:.3,pointRadius:2,borderWidth:2.5,spanGaps:true},
+    {label:'Promedio grupo',data:prom,borderColor:'#8A98AB',borderDash:[5,4],fill:false,tension:.3,pointRadius:0,borderWidth:1.5,spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{y:{beginAtZero:true,grid:{color:'#EEF1F5'}},x:{grid:{display:false},ticks:{maxTicksLimit:7}}}}});
+}
+
+/* ---------- EVENTOS ---------- */
+$("#q").addEventListener("input",e=>{ query=e.target.value.trim();
+  $("#clear").style.display=query?"block":"none"; if(T.length) renderList(); });
+$("#clear").addEventListener("click",()=>{ $("#q").value="";query="";$("#clear").style.display="none";if(T.length)renderList();$("#q").focus(); });
+
+cargar();
+</script>
+</body>
+</html>
